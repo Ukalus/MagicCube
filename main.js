@@ -6,23 +6,57 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(5,0,0)
 const renderer = new THREE.WebGLRenderer();
-renderer.setClearColor(0xffffff,0)
+renderer.setClearColor(0x000000,0)
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-
+// Empty Object 
 const rubixParent = new THREE.Object3D();
 
+// 
 const faceGeometry = new THREE.PlaneGeometry(1,1);
-    const faceRedMaterial = new THREE.MeshBasicMaterial({color: 0xff0000})
-    const faceGreenMaterial = new THREE.MeshBasicMaterial({color: 0x0000ff})
-    const faceYellowMaterial = new THREE.MeshBasicMaterial({color: 0xffff00})
-    const faceOrangeMaterial = new THREE.MeshBasicMaterial({color: 0xff00ff})
-    const faceWhiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff})
-    const faceBlueMaterial = new THREE.MeshBasicMaterial({color: 0x00ffff})
+
+const colors = {
+    red : new THREE.MeshBasicMaterial({color: 0xff0000}),
+    green : new THREE.MeshBasicMaterial({color: 0x00ff00}),
+    yellow : new THREE.MeshBasicMaterial({color: 0xffff00}),
+    orange : new THREE.MeshBasicMaterial({color: 0xFFA500}),
+    white : new THREE.MeshBasicMaterial({color: 0xffffff}),
+    blue : new THREE.MeshBasicMaterial({color: 0x0000FF}),
+}
+    
 
        
-let rubixCube = createRubixCube(3)
+let rubixCube = createRubixCube(3);
+
+function addPlaneToCube(cube,x,y,z,material, rotation){
+    const plane = new THREE.Mesh(faceGeometry, material);
+    if(rotation) {
+        plane.rotation[rotation.axis] = rotation.degree;
+    }
+    plane.position.set(x,y,z)
+    cube.add(plane)
+}
+
+function rotateCubeSide(axis, layer, degree){
+    for(let i = 0; i < rubixParent.children.length; i++){
+        if(rubixParent.children[i].position[axis] === layer){
+            let rotationMatrix = new THREE.Matrix4()
+            if(axis === "x"){
+                rotationMatrix.makeRotationX(degree);
+            }
+            else if(axis === "y"){
+                rotationMatrix.makeRotationY(degree);
+            }
+            else{
+                rotationMatrix.makeRotationZ(degree);
+            }          
+            rubixParent.children[i].applyMatrix4(rotationMatrix);
+            rubixParent.children[i].position.round();
+        }
+    }
+}
+
 for(let cubie of rubixCube){
 
     
@@ -31,248 +65,71 @@ for(let cubie of rubixCube){
     cube.position.set(cubie.position[0] - 1,cubie.position[1] -1,cubie.position[2] -1)
 
     if(cubie.position[2] === 2){
-        const plane = new THREE.Mesh(faceGeometry,faceRedMaterial);
-        plane.position.set(0,0,0.5)
-        cube.add(plane)
+        addPlaneToCube(cube, 0,0,0.5,colors.red)
     }
     if(cubie.position[2] === 0){
-        const plane = new THREE.Mesh(faceGeometry,faceGreenMaterial);
-        plane.position.set(0,0,-0.5)
-        plane.rotateY(Math.PI / 1)
-        
-        cube.add(plane)
+        addPlaneToCube(cube,0,0,-0.5,colors.green,{axis: "x", degree: Math.PI / 1})
     }
-
     if(cubie.position[1] === 2){
-        const plane = new THREE.Mesh(faceGeometry,faceYellowMaterial);
-        plane.rotateX(Math.PI / -2)
-        plane.position.set(0,0.5,0);
-
-        cube.add(plane)
+        addPlaneToCube(cube,0,0.5,0,colors.yellow,{axis: "x", degree: Math.PI / -2})          
     }
     if(cubie.position[1] === 0){
-        const plane = new THREE.Mesh(faceGeometry,faceOrangeMaterial);
-        plane.rotateX(Math.PI / 2)
-        plane.position.set(0,-0.5,0);
-
-        
-        cube.add(plane)
+        addPlaneToCube(cube,0,-0.5,0,colors.orange,{axis: "x", degree: Math.PI / 2})
     }
-
     if(cubie.position[0] === 2){
-        const plane = new THREE.Mesh(faceGeometry,faceWhiteMaterial);
-        
-        plane.position.set(0.5,0,0);
-        plane.rotateY(Math.PI / 2)
-
-        cube.add(plane)
+        addPlaneToCube(cube,0.5,0,0,colors.white,{axis: "y", degree: Math.PI / 2})
     }
     if(cubie.position[0] === 0){
-        const plane = new THREE.Mesh(faceGeometry,faceBlueMaterial);
-        
-        plane.position.set(-0.5,0,0);
-        plane.rotateY(Math.PI / -2)
-
-        
-        cube.add(plane)
+        addPlaneToCube(cube,-0.5,0,0,colors.blue,{axis: "y", degree: Math.PI / -2})
     }
 
     
     rubixParent.add(cube)
 }
 
-
-
-
-console.log(rubixParent.children.length)
-
 scene.add(rubixParent);
 
-
 document.onkeydown = function(e){
-    console.log(e.key)
         if(e.key === "w"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-                
-                if(rubixParent.children[i].position.x === -1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationX(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-                }
-        
-            }
+            rotateCubeSide("x", -1, Math.PI / 2);
         }
         else if(e.key === "e"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-                
-                if(rubixParent.children[i].position.x === 0){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationX(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-                }
-        
-            }
+            rotateCubeSide("x", 0, Math.PI / 2);    
         }
         else if(e.key === "r"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-                
-                if(rubixParent.children[i].position.x === 1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationX(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-                }
-        
-            }
+            rotateCubeSide("x", 1, Math.PI / 2);
         }
         else if(e.key === "s"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.y === -1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationY(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("y", -1, Math.PI / 2);
         }
         else if(e.key === "d"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.y === 0){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationY(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("y", 0, Math.PI / 2);
         }
         else if(e.key === "f"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.y === 1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationY(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("y", 1, Math.PI / 2);
         }
         else if(e.key === "x"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.z === -1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationZ(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("z", -1, Math.PI / 2);
         }
         else if(e.key === "c"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.z === 0){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationZ(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("z", 0, Math.PI / 2);
         }
         else if(e.key === "v"){
-            for(let i = 0; i < rubixParent.children.length; i++){
-            
-                if(rubixParent.children[i].position.z === 1){
-                //Rotate the matrix
-                    console.log(rubixParent.children[i].position)
-                    let rotationMatrix = new THREE.Matrix4()
-                    rotationMatrix.makeRotationZ(Math.PI / 2);            
-                    rubixParent.children[i].applyMatrix4(rotationMatrix);
-                    rubixParent.children[i].position.x = Math.round(rubixParent.children[i].position.x);
-                    rubixParent.children[i].position.y = Math.round(rubixParent.children[i].position.y);
-                    rubixParent.children[i].position.z = Math.round(rubixParent.children[i].position.z);
-                    console.log(rubixParent.children[i].position)
-    
-                    
-                }
-            }
+            rotateCubeSide("z", 1, Math.PI / 2);
         }
-        
-        
-            
-        
     }
 
-    
-
-    
-
-
 camera.position.z = 5
-rubixParent.rotation.x = Math.PI / 4;
-rubixParent.rotation.y = Math.PI / 16;
+rubixParent.rotation.x = Math.PI / 2;
+rubixParent.rotation.y = Math.PI / 2;
+rubixParent.rotation.z = Math.PI / 0.6;
 
-
-const controls = new OrbitControls( camera, renderer.domElement );
+const controls = new OrbitControls( camera, renderer.domElement);
 let clock = new THREE.Clock()
+let cubies = [];
 function animate(){
     requestAnimationFrame(animate);
-    let cubies = [];
     
-
     controls.update()
     renderer.render( scene, camera);
     
